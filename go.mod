@@ -8,4 +8,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/itsabgr/go-handy v0.0.0-20210902090010-6f8910d207ff
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	google.golang.org/grpc v1.20.1
+	google.golang.org/protobuf v1.27.1
 )

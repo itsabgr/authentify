@@ -1,6 +1,7 @@
 package authentify
 
 import (
+	"context"
 	"github.com/itsabgr/go-handy"
 	"time"
 )
@@ -10,8 +11,8 @@ type authenticator struct {
 }
 
 type Authenticator interface {
-	SendCode(sender Sender, to string) (_ Token, prefix string, _ error)
-	RetrieveToken(receiver string) (Token, error)
+	SendCode(ctx context.Context, sender Sender, to string) (_ Token, prefix string, _ error)
+	RetrieveToken(ctx context.Context, receiver string) (Token, error)
 }
 
 func NewAuthenticator(opt Options) (Authenticator, error) {
@@ -20,7 +21,7 @@ func NewAuthenticator(opt Options) (Authenticator, error) {
 	}, nil
 }
 
-func (a *authenticator) SendCode(sender Sender, to string) (_ Token, prefix string, _ error) {
+func (a *authenticator) SendCode(ctx context.Context, sender Sender, to string) (_ Token, prefix string, _ error) {
 	deadline := time.Now().Add(a.opt.TTL)
 	code, err := NewCode(RandString(a.opt.PrefixChars, 1), RandString(a.opt.CodeChars, a.opt.CodeLength))
 	handy.Throw(err)
@@ -32,18 +33,18 @@ func (a *authenticator) SendCode(sender Sender, to string) (_ Token, prefix stri
 	handy.Throw(err)
 	tokenBin, err := token.Encode()
 	handy.Throw(err)
-	err = sender.Send(to, code, deadline)
+	err = sender.Send(ctx, to, code, deadline)
 	if err != nil {
 		return nil, "", err
 	}
 
-	err = a.opt.Repo.Store(to, tokenBin, deadline)
+	err = a.opt.Repo.Store(ctx, to, tokenBin, deadline)
 	handy.Throw(err)
 	return token, code.GetPrefix(), nil
 }
 
-func (a *authenticator) RetrieveToken(receiver string) (Token, error) {
-	val, err := a.opt.Repo.FindByID(receiver)
+func (a *authenticator) RetrieveToken(ctx context.Context, receiver string) (Token, error) {
+	val, err := a.opt.Repo.FindByID(ctx, receiver)
 	if err != nil {
 		return nil, err
 	}

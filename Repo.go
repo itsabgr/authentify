@@ -1,6 +1,7 @@
 package authentify
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"io"
 	"time"
@@ -8,15 +9,15 @@ import (
 import badger "github.com/dgraph-io/badger/v3"
 
 type Repo interface {
-	Store(id string, val []byte, deadline time.Time) (err error)
-	FindByID(id string) ([]byte, error)
+	Store(ctx context.Context, id string, val []byte, deadline time.Time) (err error)
+	FindByID(ctx context.Context, id string) ([]byte, error)
 	io.Closer
 }
 type badgerRepo struct {
 	db *badger.DB
 }
 
-func (repo *badgerRepo) Store(id string, val []byte, deadline time.Time) (err error) {
+func (repo *badgerRepo) Store(ctx context.Context, id string, val []byte, deadline time.Time) (err error) {
 	key := []byte(id)
 	//
 	tx := repo.db.NewTransaction(true)
@@ -41,7 +42,7 @@ func (repo *badgerRepo) Store(id string, val []byte, deadline time.Time) (err er
 	return nil
 }
 
-func (repo *badgerRepo) FindByID(id string) ([]byte, error) {
+func (repo *badgerRepo) FindByID(ctx context.Context, id string) ([]byte, error) {
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
@@ -64,9 +65,7 @@ func (repo *badgerRepo) FindByID(id string) ([]byte, error) {
 }
 
 func (repo *badgerRepo) Close() error {
-	err := repo.db.Sync()
-	repo.db.Close()
-	return err
+	return repo.db.Sync()
 }
 
 func BadgerAsRepo(db *badger.DB) (Repo, error) {
