@@ -1,0 +1,33 @@
+syntax = "proto3";
+package Authentify;
+import "google/protobuf/timestamp.proto";
+
+service Authenticator {
+  rpc SendOTP (SendOTPRequest) returns (SendOTPResponse) {}
+  rpc CheckOTP (CheckOTPRequest) returns (CheckOTPResponse) {}
+}
+
+
+message SendOTPRequest{
+  required string to = 1;
+  required string type = 2;
+}
+message SendOTPResponse {
+  required google.protobuf.Timestamp deadline = 1;
+  required string salt = 2;
+}
+
+message CheckOTPRequest {
+  required string code = 1;
+  required string prefix = 2;
+  required string salt = 3;
+}
+
+
+message CheckOTPResponse{
+  required google.protobuf.Timestamp deadline = 1;
+  required string receiver = 2;
+  required string type = 3;
+  required bool valid = 4;
+}
+
